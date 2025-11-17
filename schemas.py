@@ -12,37 +12,49 @@ Model name is converted to lowercase for the collection name:
 """
 
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, List, Literal
 
-# Example schemas (replace with your own):
+# Core app schemas for Moviesque
 
+class WatchlistItem(BaseModel):
+    """
+    Watchlist items for a user.
+    Collection name: "watchlistitem"
+    """
+    user_id: str = Field(..., description="User identifier")
+    tmdb_id: Optional[int] = Field(None, description="TMDb numeric ID if available")
+    imdb_id: Optional[str] = Field(None, description="IMDB ID if available")
+    title: str = Field(..., description="Movie or TV title")
+    media_type: Literal["movie", "tv"] = Field("movie")
+    year: Optional[int] = Field(None, description="Release year")
+    poster: Optional[str] = Field(None, description="Poster URL")
+    backdrop: Optional[str] = Field(None, description="Backdrop URL")
+    rating: Optional[float] = Field(None, ge=0, le=10, description="User rating 0-10 scale")
+    liked: bool = Field(False, description="User liked this title")
+    status: Literal["later", "watching", "watched"] = Field("later", description="Watch status")
+
+class RatingEntry(BaseModel):
+    """
+    User ratings timeline entries.
+    Collection name: "ratingentry"
+    """
+    user_id: str
+    tmdb_id: Optional[int] = None
+    imdb_id: Optional[str] = None
+    title: str
+    media_type: Literal["movie", "tv"] = "movie"
+    rating: float = Field(..., ge=0, le=10)
+    review: Optional[str] = None
+
+# Example schemas retained for reference (not used directly by the app but helpful for the DB viewer)
 class User(BaseModel):
-    """
-    Users collection schema
-    Collection name: "user" (lowercase of class name)
-    """
-    name: str = Field(..., description="Full name")
-    email: str = Field(..., description="Email address")
-    address: str = Field(..., description="Address")
-    age: Optional[int] = Field(None, ge=0, le=120, description="Age in years")
-    is_active: bool = Field(True, description="Whether user is active")
+    name: str
+    email: str
+    is_active: bool = True
 
 class Product(BaseModel):
-    """
-    Products collection schema
-    Collection name: "product" (lowercase of class name)
-    """
-    title: str = Field(..., description="Product title")
-    description: Optional[str] = Field(None, description="Product description")
-    price: float = Field(..., ge=0, description="Price in dollars")
-    category: str = Field(..., description="Product category")
-    in_stock: bool = Field(True, description="Whether product is in stock")
-
-# Add your own schemas here:
-# --------------------------------------------------
-
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
+    title: str
+    description: Optional[str] = None
+    price: float
+    category: str
+    in_stock: bool = True
